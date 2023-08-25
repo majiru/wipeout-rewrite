@@ -21,7 +21,6 @@ static int32_t screen_pitch;
 static int32_t screen_ppr;
 static vec2i_t screen_size;
 
-/* TODO(moody): FIX */
 static mat4_t view_mat;
 static mat4_t mvp_mat;
 static mat4_t projection_mat;
@@ -37,6 +36,10 @@ void render_init(vec2i_t screen_size) {
 	render_set_screen_size(screen_size);
 	textures_len = 0;
 
+	view_mat = mat4_identity();
+	mvp_mat = mat4_identity();
+	projection_mat = mat4_identity();
+	sprite_mat = mat4_identity();
 	rgba_t white_pixels[4] = {
 		rgba(128,128,128,255), rgba(128,128,128,255),
 		rgba(128,128,128,255), rgba(128,128,128,255)
