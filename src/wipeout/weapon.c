@@ -75,6 +75,7 @@ void weapon_fire_turbo(ship_t *ship);
 void invert_shield_polys(Object *shield);
 
 void weapons_load() {
+	int16_t tmp;
 	weapons = mem_bump(sizeof(weapon_t) * WEAPONS_MAX);
 	weapon_assets.reticle = image_get_texture("wipeout/textures/target2.tim");
 
@@ -92,12 +93,16 @@ void weapons_load() {
 	for (int k = 0; k < primitives_len; k++) {
 		switch (poly.primitive->type) {
 		case PRM_TYPE_G3 :
-			swap(poly.g3->coords[0], poly.g3->coords[2]);
+			tmp = poly.g3->coords[0];
+			poly.g3->coords[0] = poly.g3->coords[2];
+			poly.g3->coords[2] = tmp;
 			poly.g3 += 1;
 			break;
 
 		case PRM_TYPE_G4 :
-			swap(poly.g4->coords[0], poly.g4->coords[3]);
+			tmp = poly.g4->coords[0];
+			poly.g4->coords[0] = poly.g4->coords[3];
+			poly.g4->coords[3] = tmp;
 			poly.g4 += 1;
 			break;
 		}
@@ -684,6 +689,7 @@ int weapon_get_random_type(int type_class) {
 	}
 	else {
 		die("Unknown WEAPON_CLASS_ %d", type_class);
+		return -1;
 	}
 }
 

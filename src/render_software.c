@@ -21,10 +21,11 @@ static int32_t screen_pitch;
 static int32_t screen_ppr;
 static vec2i_t screen_size;
 
-static mat4_t view_mat = mat4_identity();
-static mat4_t mvp_mat = mat4_identity();
-static mat4_t projection_mat = mat4_identity();
-static mat4_t sprite_mat = mat4_identity();
+/* TODO(moody): FIX */
+static mat4_t view_mat;
+static mat4_t mvp_mat;
+static mat4_t projection_mat;
+static mat4_t sprite_mat;
 
 static render_texture_t textures[TEXTURES_MAX];
 static uint32_t textures_len;
@@ -89,7 +90,8 @@ void render_set_view(vec3_t pos, vec3_t angles) {
 	mat4_translate(&view_mat, vec3_inv(pos));
 	mat4_set_yaw_pitch_roll(&sprite_mat, vec3(-angles.x, angles.y - M_PI, 0));
 
-	render_set_model_mat(&mat4_identity());
+	mat4_t _mat = mat4_identity();
+	render_set_model_mat(&_mat);
 }
 
 void render_set_view_2d() {
@@ -146,7 +148,11 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 	color.as_rgba.r = min(color.as_rgba.r * 2, 255);
 	color.as_rgba.g = min(color.as_rgba.g * 2, 255);
 	color.as_rgba.b = min(color.as_rgba.b * 2, 255);
-	color.as_rgba.a = clamp(color.as_rgba.a * (1.0-p0.z) * FAR_PLANE * (2.0/255.0), 0, 255);
+
+	float _v = color.as_rgba.a * (1.0-p0.z) * FAR_PLANE * (2.0/255.0);
+	float _min = 0;
+	float _max = 1;
+	color.as_rgba.a = _v > _max ? _max : _v < _min ? _min : _v;
 
 	line(sc0, sc1, color);
 	line(sc1, sc2, color);
@@ -154,6 +160,7 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 }
 
 void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {
+	tris_t _tris;
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
 
 	vec3_t p0 = vec3_add(pos, vec3_transform(vec3(-size.x * 0.5, -size.y * 0.5, 0), &sprite_mat));
@@ -162,20 +169,15 @@ void render_push_sprite(vec3_t pos, vec2i_t size, rgba_t color, uint16_t texture
 	vec3_t p3 = vec3_add(pos, vec3_transform(vec3( size.x * 0.5,  size.y * 0.5, 0), &sprite_mat));
 
 	render_texture_t *t = &textures[texture_index];
-	render_push_tris((tris_t){
-		.vertices = {
-			{.pos = p0, .uv = {0, 0}, .color = color},
-			{.pos = p1, .uv = {0 + t->size.x ,0}, .color = color},
-			{.pos = p2, .uv = {0, 0 + t->size.y}, .color = color},
-		}
-	}, texture_index);
-	render_push_tris((tris_t){
-		.vertices = {
-			{.pos = p2, .uv = {0, 0 + t->size.y}, .color = color},
-			{.pos = p1, .uv = {0 + t->size.x, 0}, .color = color},
-			{.pos = p3, .uv = {0 + t->size.x, 0 + t->size.y}, .color = color},
-		}
-	}, texture_index);
+	_tris.vertices[0] = (vertex_t){p0, (vec2_t){0, 0}, color};
+	_tris.vertices[1] = (vertex_t){p1, (vec2_t){0 + t->size.x ,0}, color};
+	_tris.vertices[2] = (vertex_t){p2, (vec2_t){0, 0 + t->size.y}, color};
+	render_push_tris(_tris, texture_index);
+
+	_tris.vertices[0] = (vertex_t){p2, (vec2_t){0, 0 + t->size.y}, color};
+	_tris.vertices[1] = (vertex_t){p1, (vec2_t){0 + t->size.x, 0}, color};
+	_tris.vertices[2] = (vertex_t){p3, (vec2_t){0 + t->size.x, 0 + t->size.y}, color};
+	render_push_tris(_tris, texture_index);
 }
 
 void render_push_2d(vec2i_t pos, vec2i_t size, rgba_t color, uint16_t texture_index) {
@@ -183,22 +185,18 @@ void render_push_2d(vec2i_t pos, vec2i_t size, rgba_t color, uint16_t texture_in
 }
 
 void render_push_2d_tile(vec2i_t pos, vec2i_t uv_offset, vec2i_t uv_size, vec2i_t size, rgba_t color, uint16_t texture_index) {
+	tris_t _tris;
 	error_if(texture_index >= textures_len, "Invalid texture %d", texture_index);
-	render_push_tris((tris_t){
-		.vertices = {
-			{.pos = {pos.x, pos.y + size.y, 0}, .uv = {uv_offset.x , uv_offset.y + uv_size.y}, .color = color},
-			{.pos = {pos.x + size.x, pos.y, 0}, .uv = {uv_offset.x +  uv_size.x, uv_offset.y}, .color = color},
-			{.pos = {pos.x, pos.y, 0}, .uv = {uv_offset.x , uv_offset.y}, .color = color},
-		}
-	}, texture_index);
 
-	render_push_tris((tris_t){
-		.vertices = {
-			{.pos = {pos.x + size.x, pos.y + size.y, 0}, .uv = {uv_offset.x + uv_size.x, uv_offset.y + uv_size.y}, .color = color},
-			{.pos = {pos.x + size.x, pos.y, 0}, .uv = {uv_offset.x + uv_size.x, uv_offset.y}, .color = color},
-			{.pos = {pos.x, pos.y + size.y, 0}, .uv = {uv_offset.x , uv_offset.y + uv_size.y}, .color = color},
-		}
-	}, texture_index);
+	_tris.vertices[0] = (vertex_t){(vec3_t){pos.x, pos.y + size.y, 0}, (vec2_t){uv_offset.x , uv_offset.y + uv_size.y}, color};
+	_tris.vertices[1] = (vertex_t){(vec3_t){pos.x + size.x, pos.y, 0}, (vec2_t){uv_offset.x +  uv_size.x, uv_offset.y}, color};
+	_tris.vertices[2] = (vertex_t){(vec3_t){pos.x, pos.y, 0}, (vec2_t){uv_offset.x , uv_offset.y}, color};
+	render_push_tris(_tris, texture_index);
+
+	_tris.vertices[0] = (vertex_t){(vec3_t){pos.x + size.x, pos.y + size.y, 0}, (vec2_t){uv_offset.x + uv_size.x, uv_offset.y + uv_size.y}, color};
+	_tris.vertices[1] = (vertex_t){(vec3_t){pos.x + size.x, pos.y, 0}, (vec2_t){uv_offset.x + uv_size.x, uv_offset.y}, color};
+	_tris.vertices[2] = (vertex_t){(vec3_t){pos.x, pos.y + size.y, 0}, (vec2_t){uv_offset.x , uv_offset.y + uv_size.y}, color};
+	render_push_tris(_tris, texture_index);
 }
 
 
@@ -208,7 +206,7 @@ uint16_t render_texture_create(uint32_t width, uint32_t height, rgba_t *pixels) 
 	uint32_t byte_size = width * height * sizeof(rgba_t);
 	uint16_t texture_index = textures_len;
 	
-	textures[texture_index] = (render_texture_t){{width, height}, NULL};
+	textures[texture_index] = (render_texture_t){(vec2i_t){width, height}, NULL};
 	// textures[texture_index] = (render_texture_t){{width, height}, mem_bump(byte_size)};
 	// memcpy(textures[texture_index].pixels, pixels, byte_size);
 
@@ -242,11 +240,28 @@ void render_textures_dump(const char *path) {}
 
 // -----------------------------------------------------------------------------
 
+
+#define lerp(a, b, t) ({ \
+		__typeof__(a) _a = a; \
+		_a + ((b) - _a) * (t); \
+	})
+
 static inline rgba_t color_mix(rgba_t in, rgba_t out) {
+	uint8_t _a, _za, _zb, _zc;
+ 
+	_a = in.as_rgba.r;
+	_za = _a + ((out.as_rgba.r) - _a) * (out.as_rgba.a/255.0);
+
+	_a = in.as_rgba.g;
+	_zb = _a + ((out.as_rgba.g) - _a) * (out.as_rgba.a/255.0);
+
+	_a = in.as_rgba.b;
+	_zc = _a + ((out.as_rgba.b) - _a) * (out.as_rgba.a/255.0);
+
 	return rgba(
-		lerp(in.as_rgba.r, out.as_rgba.r, out.as_rgba.a/255.0),
-		lerp(in.as_rgba.g, out.as_rgba.g, out.as_rgba.a/255.0),
-		lerp(in.as_rgba.b, out.as_rgba.b, out.as_rgba.a/255.0),
+		_za,
+		_zb,
+		_zc,
 		1
 	);
 }
@@ -331,13 +346,24 @@ static void line(vec2i_t p0, vec2i_t p1, rgba_t color) {
 	// Bresenham's line algorithm
 	bool steep = false; 
 	if (abs(p0.x - p1.x) < abs(p0.y - p1.y)) {
-		swap(p0.x, p0.y); 
-		swap(p1.x, p1.y); 
+		int32_t tmp = p0.x;
+		p0.x = p0.y;
+		p0.y = tmp;
+
+		tmp = p1.x;
+		p1.x = p1.y;
+		p1.y = tmp;
 		steep = true;
 	} 
 	if (p0.x > p1.x) { 
-		swap(p0.x, p1.x); 
-		swap(p0.y, p1.y); 
+
+		int32_t tmp = p0.x;
+		p0.x = p1.x;
+		p1.x = tmp;
+
+		tmp = p0.y;
+		p0.y = p1.y;
+		p1.y = tmp; 
 	} 
 	int32_t dx = p1.x - p0.x; 
 	int32_t dy = p1.y - p0.y; 

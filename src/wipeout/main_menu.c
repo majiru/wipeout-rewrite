@@ -134,7 +134,7 @@ static void page_options_init(menu_t *menu) {
 // -----------------------------------------------------------------------------
 // Options Controls
 
-static const char *button_names[NUM_GAME_ACTIONS][2] = {};
+static const char *button_names[NUM_GAME_ACTIONS][2];
 static int control_current_action;
 static float await_input_deadline;
 
@@ -169,7 +169,11 @@ static void page_options_control_set_draw(menu_t *menu, int data) {
 	float remaining = await_input_deadline - platform_now();
 
 	menu_page_t *page = &menu->pages[menu->index];
-	char remaining_text[2] = { '0' + (uint8_t)clamp(remaining + 1, 0, 3), '\0'};
+	float _v = remaining+1;
+	float _min = 0;
+	float _max = 3;
+	
+	char remaining_text[2] = { '0' + (uint8_t)(_v > _max ? _max : _v < _min ? _min : _v), '\0'};
 	vec2i_t pos = vec2i(page->items_pos.x, page->items_pos.y + 24);
 	ui_draw_text_centered(remaining_text, ui_scaled_pos(page->items_anchor, pos), UI_SIZE_16, UI_COLOR_DEFAULT);
 

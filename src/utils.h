@@ -10,6 +10,22 @@
 #endif
 #define member_size(type, member) sizeof(((type *)0)->member)
 
+#ifdef __plan9__
+
+static int
+max(int a, int b)
+{
+	return a > b ? a : b;
+}
+
+static int
+min(int a, int b)
+{
+	return a < b ? a : b;
+}
+
+#else
+
 #define max(a,b) ({ \
 		__typeof__ (a) _a = (a); \
 		__typeof__ (b) _b = (b); \
@@ -38,6 +54,8 @@
 		__typeof__(a) _a = a; \
 		_a + ((b) - _a) * (t); \
 	})
+
+#endif
 
 #define len(A) (sizeof(A) / sizeof(A[0]))
 #define clear(A) memset(A, 0, sizeof(A))
@@ -75,6 +93,9 @@ bool file_exists(char *path);
 uint8_t *file_load(char *path, uint32_t *bytes_read);
 uint32_t file_store(char *path, void *bytes, int32_t len);
 
+#ifdef __plan9__
+
+#else
 
 #define sort(LIST, LEN, COMPARE_FUNC) \
 	for (uint32_t sort_i = 1, sort_j; sort_i < (LEN); sort_i++) { \
@@ -92,6 +113,8 @@ uint32_t file_store(char *path, void *bytes, int32_t len);
 		int j = rand_int(0, i+1); \
 		swap((LIST)[i], (LIST)[j]); \
 	}
+
+#endif
 
 
 static inline uint8_t get_u8(uint8_t *bytes, uint32_t *p) {

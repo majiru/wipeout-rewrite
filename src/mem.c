@@ -9,7 +9,7 @@ static uint8_t hunk[MEM_HUNK_BYTES];
 static uint32_t bump_len = 0;
 static uint32_t temp_len = 0;
 
-static uint32_t temp_objects[MEM_TEMP_OBJECTS_MAX] = {};
+static uint32_t temp_objects[MEM_TEMP_OBJECTS_MAX];
 static uint32_t temp_objects_len;
 
 

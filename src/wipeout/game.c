@@ -487,8 +487,8 @@ game_t g = {0};
 
 
 struct {
-	void (*init)();
-	void (*update)();
+	void (*init)(void);
+	void (*update)(void);
 } game_scenes[] = {
 	[GAME_SCENE_INTRO] = {intro_init, intro_update},
 	[GAME_SCENE_TITLE] = {title_init, title_update},

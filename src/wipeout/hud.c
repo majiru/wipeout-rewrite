@@ -31,22 +31,26 @@ const struct {
 } speedo = {
 	.width = 121,
 	.skew = 2,
-	.bars = {
-		{{.x =   6, .y = 12}, .height = 10, .color = rgba( 66,  16,  49, 255)},
-		{{.x =  13, .y = 12}, .height = 10, .color = rgba(115,  33,  90, 255)},
-		{{.x =  20, .y = 12}, .height = 10, .color = rgba(132,  58, 164, 255)},
-		{{.x =  27, .y = 12}, .height = 10, .color = rgba( 99,  90, 197, 255)},
-		{{.x =  34, .y = 12}, .height = 10, .color = rgba( 74, 148, 181, 255)},
-		{{.x =  41, .y = 12}, .height = 10, .color = rgba( 66, 173, 115, 255)},
-		{{.x =  50, .y = 10}, .height = 12, .color = rgba( 99, 206,  58, 255)},
-		{{.x =  59, .y =  8}, .height = 12, .color = rgba(189, 206,  41, 255)},
-		{{.x =  69, .y =  5}, .height = 13, .color = rgba(247, 140,  33, 255)},
-		{{.x =  81, .y =  2}, .height = 15, .color = rgba(255, 197,  49, 255)},
-		{{.x =  95, .y =  1}, .height = 16, .color = rgba(255, 222, 115, 255)},
-		{{.x = 110, .y =  1}, .height = 16, .color = rgba(255, 239, 181, 255)},
-		{{.x = 126, .y =  1}, .height = 16, .color = rgba(255, 255, 255, 255)}
-	}
 };
+
+static void
+initspeedo(void)
+{
+	speedo.bars[0] = (speedo_bar_t){(vec2i_t){6, 12}, 10, rgba( 66,  16,  49, 255)};
+	speedo.bars[1] = (speedo_bar_t){(vec2i_t){13, 12}, 10, rgba(115,  33,  90, 255)};
+	speedo.bars[2] = (speedo_bar_t){(vec2i_t){20, 12}, 10, rgba(132,  58, 164, 255)};
+	speedo.bars[3] = (speedo_bar_t){(vec2i_t){27, 12}, 10, rgba( 99,  90, 197, 255)};
+	speedo.bars[4] = (speedo_bar_t){(vec2i_t){34, 12}, 10, rgba( 74, 148, 181, 255)};
+	speedo.bars[5] = (speedo_bar_t){(vec2i_t){41, 12}, 10, rgba( 66, 173, 115, 255)};
+	speedo.bars[6] = (speedo_bar_t){(vec2i_t){50, 10}, 12, rgba( 99, 206,  58, 255)};
+	speedo.bars[7] = (speedo_bar_t){(vec2i_t){59, 8}, 12, rgba(189, 206,  41, 255)};
+	speedo.bars[8] = (speedo_bar_t){(vec2i_t){ 69, 5}, 13, rgba(247, 140,  33, 255)};
+	speedo.bars[9] = (speedo_bar_t){(vec2i_t){81, 2}, 15, rgba(255, 197,  49, 255)};
+	speedo.bars[10] = (speedo_bar_t){(vec2i_t){95, 1}, 16, rgba(255, 222, 115, 255)};
+	speedo.bars[11] = (speedo_bar_t){(vec2i_t){110, 1}, 16, rgba(255, 239, 181, 255)};
+	speedo.bars[12] = (speedo_bar_t){(vec2i_t){126, 1}, 16, rgba(255, 255, 255, 255)};
+}
+
 
 static uint16_t speedo_facia_texture;
 
@@ -58,73 +62,100 @@ void hud_load() {
 
 static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speedo_bar_t *b, float f, rgba_t color_override) {
 	rgba_t left_color, right_color;
+	tris_t _tris;
 	if (color_override.as_uint32 > 0) {
 		left_color = color_override;
 		right_color = color_override;
 	}
 	else {
 		left_color = a->color;
+		float _za, _zb, _zc, _zd;
+		uint8_t _a;
+		_a = a->color.as_rgba.r;
+		_za = _a + (b->color.as_rgba.r - _a) * f;
+
+		_a = a->color.as_rgba.g;
+		_zb = _a + (b->color.as_rgba.g - _a) * f;
+
+		_a = a->color.as_rgba.b;
+		_zc = _a + (b->color.as_rgba.b - _a) * f;
+
+		_a = a->color.as_rgba.a;
+		_zd = _a + (b->color.as_rgba.a - _a) * f;
 		right_color = rgba(
-			lerp(a->color.as_rgba.r, b->color.as_rgba.r, f),
-			lerp(a->color.as_rgba.g, b->color.as_rgba.g, f),
-			lerp(a->color.as_rgba.b, b->color.as_rgba.b, f),
-			lerp(a->color.as_rgba.a, b->color.as_rgba.a, f)
+			_za,
+			_zb,
+			_zc,
+			_zd
 		);
 	}
 
-	float right_h = lerp(a->height, b->height, f);
+	float right_h;
+	{
+		uint16_t _a;
+		float _za;
+		_a = a->height;
+		_za = _a + (b->height - _a) * f;
+		right_h = _za;
+	}
+
 	vec2i_t top_left     = vec2i(a->offset.x + 1, a->offset.y);
 	vec2i_t bottom_left  = vec2i(a->offset.x + 1 - a->height / speedo.skew, a->offset.y + a->height);
-	vec2i_t top_right    = vec2i(lerp(a->offset.x + 1, b->offset.x, f), lerp(a->offset.y, b->offset.y, f));
-	vec2i_t bottom_right = vec2i(top_right.x - right_h / speedo.skew, top_right.y + right_h);
+	vec2i_t top_right, bottom_right;
+	{
+		uint32_t _a;
+		float _za, _zb;
+		_a = a->offset.x + 1;
+		_za = _a + (b->offset.x - _a) * f;
+
+		_a = a->offset.y;
+		_zb = _a + (b->offset.y - _a) * f;
+		top_right    = vec2i(_za, _zb);
+		bottom_right = vec2i(top_right.x - right_h / speedo.skew, top_right.y + right_h);
+	}
 
 	top_left     = ui_scaled(top_left);
 	bottom_left  = ui_scaled(bottom_left);
 	top_right    = ui_scaled(top_right);
 	bottom_right = ui_scaled(bottom_right);
 
-	render_push_tris((tris_t) {
-		.vertices = {
-			{
-				.pos = {pos->x + bottom_left.x, pos->y + bottom_left.y, 0},
-				.uv = {0, 0},
-				.color = left_color
-			},
-			{
-				.pos = {pos->x + top_right.x, pos->y + top_right.y, 0},
-				.uv = {0, 0},
-				.color = right_color
-			},
-			{
-				.pos = {pos->x + top_left.x, pos->y + top_left.y, 0},
-				.uv = {0, 0},
-				.color = left_color
-			},
-		}
-	}, RENDER_NO_TEXTURE);
+	_tris.vertices[0] = (vertex_t) {
+		(vec3_t){pos->x + bottom_left.x, pos->y + bottom_left.y, 0},
+		(vec2_t){0, 0},
+		left_color,
+	};
+	_tris.vertices[1] = (vertex_t) {
+		(vec3_t){pos->x + top_right.x, pos->y + top_right.y, 0},
+		(vec2_t){0, 0},
+		right_color,
+	};
+	_tris.vertices[2] = (vertex_t) {
+		(vec3_t){pos->x + top_left.x, pos->y + top_left.y, 0},
+		(vec2_t){0, 0},
+		left_color,
+	};
+	render_push_tris(_tris, RENDER_NO_TEXTURE);
 
-	render_push_tris((tris_t) {
-		.vertices = {
-			{
-				.pos = {pos->x + bottom_right.x, pos->y + bottom_right.y, 0},
-				.uv = {0, 0},
-				.color = right_color
-			},
-			{
-				.pos = {pos->x + top_right.x, pos->y + top_right.y, 0},
-				.uv = {0, 0},
-				.color = right_color
-			},
-			{
-				.pos = {pos->x + bottom_left.x, pos->y + bottom_left.y, 0},
-				.uv = {0, 0},
-				.color = left_color
-			},
-		}
-	}, RENDER_NO_TEXTURE);
+	_tris.vertices[0] = (vertex_t) {
+		(vec3_t){pos->x + bottom_right.x, pos->y + bottom_right.y, 0},
+		(vec2_t){0, 0},
+		right_color
+	};
+	_tris.vertices[1] = (vertex_t) {
+		(vec3_t){pos->x + top_right.x, pos->y + top_right.y, 0},
+		(vec2_t){0, 0},
+		right_color
+	};
+	_tris.vertices[2] = (vertex_t) {
+		(vec3_t){pos->x + bottom_left.x, pos->y + bottom_left.y, 0},
+		(vec2_t){0, 0},
+		left_color
+	};
+	render_push_tris(_tris, RENDER_NO_TEXTURE);
 }
 
 static void hud_draw_speedo_bars(vec2i_t *pos, float f, rgba_t color_override) {
+	static int donespeedoinit = 0;
 	if (f <= 0) {
 		return;
 	}
@@ -136,6 +167,10 @@ static void hud_draw_speedo_bars(vec2i_t *pos, float f, rgba_t color_override) {
 		f = 13;
 	}
 
+	if(!donespeedoinit){
+		initspeedo();
+		donespeedoinit = 1;
+	}
 	int bars = f;
 	for (int i = 1; i < bars; i++) {
 		hud_draw_speedo_bar(pos, &speedo.bars[i - 1], &speedo.bars[i], 1, color_override);

@@ -172,20 +172,13 @@ void track_load_faces(char *file_name, vec3_t *vertices) {
 		rgba_t color = {.as_uint32 = get_i32_le(bytes, &p) | 0xff000000};
 		const vec2_t *uv = track_uv[flags_is(tf->flags, FACE_FLIP_TEXTURE) ? 1 : 0];
 
-		tf->tris[0] = (tris_t){
-			.vertices = {
-				{.pos = v0, .uv = uv[0], .color = color},
-				{.pos = v1, .uv = uv[1], .color = color},
-				{.pos = v2, .uv = uv[2], .color = color},
-			}
-		};
-		tf->tris[1] = (tris_t){
-			.vertices = {
-				{.pos = v3, .uv = uv[3], .color = color},
-				{.pos = v0, .uv = uv[0], .color = color},
-				{.pos = v2, .uv = uv[2], .color = color},
-			}
-		};
+		tf->tris[0].vertices[0] = (vertex_t){v0, uv[0], color};
+		tf->tris[0].vertices[1] = (vertex_t){v1, uv[1], color};
+		tf->tris[0].vertices[2] = (vertex_t){v2, uv[2], color};
+
+		tf->tris[1].vertices[0] = (vertex_t){v3, uv[3], color};
+		tf->tris[1].vertices[1] = (vertex_t){v0, uv[0], color};
+		tf->tris[1].vertices[2] = (vertex_t){v2, uv[2], color};
 
 		tf++;
 	}
@@ -265,7 +258,9 @@ void track_draw_section(section_t *section) {
 }
 
 void track_draw(camera_t *camera) {	
-	render_set_model_mat(&mat4_identity());	
+	mat4_t _mat;
+	_mat = mat4_identity();
+	render_set_model_mat(&_mat);	
 	
 	float max_dist_sq = RENDER_FADEOUT_FAR * RENDER_FADEOUT_FAR;
 	vec3_t cam_pos = camera->position;

@@ -51,7 +51,6 @@ void ships_load() {
 	}
 }
 
-
 void ships_init(section_t *section) {
 	section_t *start_sections[len(g.ships)];
 
@@ -64,7 +63,12 @@ void ships_init(section_t *section) {
 
 	// Randomize order for single race or new championship
 	if (g.race_type != RACE_TYPE_CHAMPIONSHIP || g.circut == CIRCUT_ALTIMA_VII) {
-		shuffle(ranks_to_pilots, len(ranks_to_pilots));
+		for (int i = len(ranks_to_pilots) - 1; i > 0; i--) {
+			int j = rand_int(0, i+1);
+			int tmp = (ranks_to_pilots)[i];
+			(ranks_to_pilots)[i] = (ranks_to_pilots)[j];
+			(ranks_to_pilots)[j] = tmp;
+		}
 	}
 
 	// Randomize some tiers in an ongoing championship
@@ -72,15 +76,27 @@ void ships_init(section_t *section) {
 		// Initialize with current championship order
 		for (int i = 0; i < len(g.ships); i++) {
 			ranks_to_pilots[i] = g.championship_ranks[i].pilot;
-		}		
-		shuffle(ranks_to_pilots, 2); // shuffle 0..1
-		shuffle(ranks_to_pilots + 4, len(ranks_to_pilots)-5); // shuffle 4..len-1
+		}
+		for (int i = 2 - 1; i > 0; i--) {
+			int j = rand_int(0, i+1);
+			int tmp = (ranks_to_pilots)[i];
+			(ranks_to_pilots)[i] = (ranks_to_pilots)[j];
+			(ranks_to_pilots)[j] = tmp;
+		}
+		for (int i = (len(ranks_to_pilots)-5) - 1; i > 0; i--) {
+			int j = rand_int(0, i+1);
+			int tmp = (ranks_to_pilots + 4)[i];
+			(ranks_to_pilots + 4)[i] = (ranks_to_pilots + 4)[j];
+			(ranks_to_pilots + 4)[j] = tmp;
+		}
 	}
 
 	// player is always last
 	for (int i = 0; i < len(ranks_to_pilots)-1; i++) {
 		if (ranks_to_pilots[i] == g.pilot) {
-			swap(ranks_to_pilots[i], ranks_to_pilots[i+1]);
+			int tmp = (ranks_to_pilots)[i];
+			(ranks_to_pilots)[i] = (ranks_to_pilots)[i+1];
+			(ranks_to_pilots)[i+1] = tmp;
 		}
 	}
 
@@ -135,7 +151,15 @@ void ships_update() {
 		}
 
 		if (flags_is(g.ships[g.pilot].flags, SHIP_RACING)) {
-			sort(g.race_ranks, len(g.race_ranks), sort_rank_compare);
+			for (uint32_t sort_i = 1, sort_j; sort_i < (len(g.race_ranks)); sort_i++) {
+				sort_j = sort_i;
+				pilot_points_t sort_temp = (g.race_ranks)[sort_j];
+				while (sort_j > 0 && sort_rank_compare(&(g.race_ranks)[sort_j-1], &sort_temp)) {
+					(g.race_ranks)[sort_j] = (g.race_ranks)[sort_j-1]; 
+					sort_j--;
+				}
+				(g.race_ranks)[sort_j] = sort_temp;
+			}
 			for (int32_t i = 0; i < len(g.ships); i++) {
 				g.ships[g.race_ranks[i].pilot].position_rank = i + 1;
 			}
@@ -146,6 +170,7 @@ void ships_update() {
 
 
 void ships_draw() {
+	mat4_t _mat4;
 	// Ship models
 	for (int i = 0; i < len(g.ships); i++) {
 		if (
@@ -160,7 +185,8 @@ void ships_draw() {
 
 
 	// Shadows
-	render_set_model_mat(&mat4_identity());
+	_mat4 = mat4_identity();
+	render_set_model_mat(&_mat4);
 
 	render_set_depth_write(false);
 	render_set_depth_offset(-32.0);
@@ -394,7 +420,8 @@ void ship_draw(ship_t *self) {
 	object_draw(self->model, &self->mat);
 }
 
-void ship_draw_shadow(ship_t *self) {	
+void ship_draw_shadow(ship_t *self) {
+	tris_t _tris;
 	track_face_t *face = track_section_get_base_face(self->section);
 
 	vec3_t face_point = face->tris[0].vertices[0].pos;
@@ -407,25 +434,22 @@ void ship_draw_shadow(ship_t *self) {
 	wngr = vec3_sub(wngr, vec3_mulf(face->normal, vec3_distance_to_plane(wngr, face_point, face->normal)));
 	
 	rgba_t color = rgba(0 , 0 , 0, 128);
-	render_push_tris((tris_t) {
-		.vertices = {
-			{
-				.pos = {wngl.x, wngl.y, wngl.z},
-				.uv = {0, 256},
-				.color = color,
-			},
-			{
-				.pos = {wngr.x, wngr.y, wngr.z},
-				.uv = {128, 256},
-				.color = color
-			},
-			{
-				.pos = {nose.x, nose.y, nose.z},
-				.uv = {64, 0},
-				.color = color
-			},
-		}
-	}, self->shadow_texture);
+	_tris.vertices[0] = (vertex_t) {
+		(vec3_t){wngl.x, wngl.y, wngl.z},
+		(vec2_t){0, 256},
+		color,
+	},
+	_tris.vertices[1] = (vertex_t) {
+		(vec3_t){wngr.x, wngr.y, wngr.z},
+		(vec2_t){128, 256},
+		color
+	},
+	_tris.vertices[2] = (vertex_t) {
+		(vec3_t){nose.x, nose.y, nose.z},
+		(vec2_t){64, 0},
+		color
+	},
+	render_push_tris(_tris, self->shadow_texture);
 }
 
 void ship_update(ship_t *self) {

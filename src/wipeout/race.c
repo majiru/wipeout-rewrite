@@ -216,7 +216,18 @@ void race_end() {
 				}
 			}
 		}
-		sort(g.championship_ranks, len(g.championship_ranks), sort_points_compare);
+
+		for (uint32_t sort_i = 1, sort_j; sort_i < (len(g.championship_ranks)); sort_i++) {
+			sort_j = sort_i;
+			pilot_points_t sort_temp = (g.championship_ranks)[sort_j];
+			while (sort_j > 0 && sort_points_compare(&(g.championship_ranks)[sort_j-1], &sort_temp)) {
+				(g.championship_ranks)[sort_j] = (g.championship_ranks)[sort_j-1];
+				sort_j--;
+			} 
+			(g.championship_ranks)[sort_j] = sort_temp; 
+		}
+
+		//sort(g.championship_ranks, len(g.championship_ranks), sort_points_compare);
 	}
 
 	active_menu = race_stats_menu_init();

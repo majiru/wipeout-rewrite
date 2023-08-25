@@ -14,7 +14,12 @@ float vec3_angle(vec3_t a, vec3_t b) {
 	float cosine = (magnitude == 0)
 		? 1
 		: vec3_dot(a, b) / magnitude;
-	return acos(clamp(cosine, -1, 1));
+
+	float _v = cosine;
+	float _min = -1;
+	float _max = 1;
+	
+	return acos(_v > _max ? _max : _v < _min ? _min : _v);
 }
 
 vec3_t vec3_transform(vec3_t a, mat4_t *mat) {

@@ -8,57 +8,13 @@ static uint64_t perf_freq = 0;
 static bool wants_to_exit = false;
 static SDL_Window *window;
 static SDL_AudioDeviceID audio_device;
-static SDL_GameController *gamepad;
 static void (*audio_callback)(float *buffer, uint32_t len) = NULL;
-
-
-uint8_t platform_sdl_gamepad_map[] = {
-	[SDL_CONTROLLER_BUTTON_A] = INPUT_GAMEPAD_A,
-	[SDL_CONTROLLER_BUTTON_B] = INPUT_GAMEPAD_B,
-	[SDL_CONTROLLER_BUTTON_X] = INPUT_GAMEPAD_X,
-	[SDL_CONTROLLER_BUTTON_Y] = INPUT_GAMEPAD_Y,
-	[SDL_CONTROLLER_BUTTON_BACK] = INPUT_GAMEPAD_SELECT,
-	[SDL_CONTROLLER_BUTTON_GUIDE] = INPUT_GAMEPAD_HOME,
-	[SDL_CONTROLLER_BUTTON_START] = INPUT_GAMEPAD_START,
-	[SDL_CONTROLLER_BUTTON_LEFTSTICK] = INPUT_GAMEPAD_L_STICK_PRESS,
-	[SDL_CONTROLLER_BUTTON_RIGHTSTICK] = INPUT_GAMEPAD_R_STICK_PRESS,
-	[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = INPUT_GAMEPAD_L_SHOULDER,
-	[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = INPUT_GAMEPAD_R_SHOULDER,
-	[SDL_CONTROLLER_BUTTON_DPAD_UP] = INPUT_GAMEPAD_DPAD_UP,
-	[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = INPUT_GAMEPAD_DPAD_DOWN,
-	[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = INPUT_GAMEPAD_DPAD_LEFT,
-	[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = INPUT_GAMEPAD_DPAD_RIGHT,
-	[SDL_CONTROLLER_BUTTON_MAX] = INPUT_INVALID
-};
-
-
-uint8_t platform_sdl_axis_map[] = {
-	[SDL_CONTROLLER_AXIS_LEFTX] = INPUT_GAMEPAD_L_STICK_LEFT,
-	[SDL_CONTROLLER_AXIS_LEFTY] = INPUT_GAMEPAD_L_STICK_UP,
-	[SDL_CONTROLLER_AXIS_RIGHTX] = INPUT_GAMEPAD_R_STICK_LEFT,
-	[SDL_CONTROLLER_AXIS_RIGHTY] = INPUT_GAMEPAD_R_STICK_UP,
-	[SDL_CONTROLLER_AXIS_TRIGGERLEFT] = INPUT_GAMEPAD_L_TRIGGER,
-	[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = INPUT_GAMEPAD_R_TRIGGER,
-	[SDL_CONTROLLER_AXIS_MAX] = INPUT_INVALID
-};
-
 
 void platform_exit() {
 	wants_to_exit = true;
 }
 
-SDL_GameController *platform_find_gamepad() {
-	for (int i = 0; i < SDL_NumJoysticks(); i++) {
-		if (SDL_IsGameController(i)) {
-			return SDL_GameControllerOpen(i);
-		}
-	}
-
-	return NULL;
-}
-
-
-void platform_pump_events() {
+void platform_pump_events(void) {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
 		// Input Keyboard
@@ -77,55 +33,6 @@ void platform_pump_events() {
 		else if (ev.type == SDL_TEXTINPUT) {
 			input_textinput(ev.text.text[0]);
 		}
-
-		// Gamepads connect/disconnect
-		else if (ev.type == SDL_CONTROLLERDEVICEADDED) {
-			gamepad = SDL_GameControllerOpen(ev.cdevice.which);
-		}
-		else if (ev.type == SDL_CONTROLLERDEVICEREMOVED) {
-			if (gamepad && ev.cdevice.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamepad))) {
-				SDL_GameControllerClose(gamepad);
-				gamepad = platform_find_gamepad();
-			}
-		}
-
-		// Input Gamepad Buttons
-		else if (
-			ev.type == SDL_CONTROLLERBUTTONDOWN || 
-			ev.type == SDL_CONTROLLERBUTTONUP
-		) {
-			if (ev.cbutton.button < SDL_CONTROLLER_BUTTON_MAX) {
-				button_t button = platform_sdl_gamepad_map[ev.cbutton.button];
-				if (button != INPUT_INVALID) {
-					float state = ev.type == SDL_CONTROLLERBUTTONDOWN ? 1.0 : 0.0;
-					input_set_button_state(button, state);
-				}
-			}
-		}
-
-		// Input Gamepad Axis
-		else if (ev.type == SDL_CONTROLLERAXISMOTION) {
-			float state = (float)ev.caxis.value / 32767.0;
-
-			if (ev.caxis.axis < SDL_CONTROLLER_AXIS_MAX) {
-				int code = platform_sdl_axis_map[ev.caxis.axis];
-				if (
-					code == INPUT_GAMEPAD_L_TRIGGER || 
-					code == INPUT_GAMEPAD_R_TRIGGER
-				) {
-					input_set_button_state(code, state);
-				}
-				else if (state > 0) {
-					input_set_button_state(code, 0.0);
-					input_set_button_state(code+1, state);
-				}
-				else {
-					input_set_button_state(code, -state);
-					input_set_button_state(code+1, 0.0);
-				}
-			}
-		}
-
 		// Mouse buttons
 		else if (
 			ev.type == SDL_MOUSEBUTTONDOWN ||
@@ -180,7 +87,8 @@ double platform_now() {
 }
 
 void platform_set_fullscreen(bool fullscreen) {
-	if (fullscreen) {
+	if (0) {
+	/*
 		int32_t display = SDL_GetWindowDisplayIndex(window);
 		
 		SDL_DisplayMode mode;
@@ -188,6 +96,7 @@ void platform_set_fullscreen(bool fullscreen) {
 		SDL_SetWindowDisplayMode(window, &mode);
 		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 		SDL_ShowCursor(SDL_DISABLE);
+	*/
 	}
 	else {
 		SDL_SetWindowFullscreen(window, 0);
@@ -250,32 +159,33 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 	static SDL_Texture *screenbuffer = NULL;
 	static void *screenbuffer_pixels = NULL;
 	static int screenbuffer_pitch;
-	static vec2i_t screenbuffer_size = vec2i(0, 0);
-	static vec2i_t screen_size = vec2i(0, 0);
+	static vec2i_t screenbuffer_size;
+	static vec2i_t screen_size;
 
-
-	void platform_video_init() {
+	void platform_video_init(void) {
+		screenbuffer_size = vec2i(0, 0);
+		screen_size = vec2i(0, 0);
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	}
 
-	void platform_video_cleanup() {
+	void platform_video_cleanup(void) {
 		
 	}
 
-	void platform_prepare_frame() {
+	void platform_prepare_frame(void) {
 		if (screen_size.x != screenbuffer_size.x || screen_size.y != screenbuffer_size.y) {
 			if (screenbuffer) {
 				SDL_DestroyTexture(screenbuffer);
 			}
-			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
+			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
 			screenbuffer_size = screen_size;
 		}
-		SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
+		//SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
 	}
 
-	void platform_end_frame() {
+	void platform_end_frame(void) {
 		screenbuffer_pixels = NULL;
-		SDL_UnlockTexture(screenbuffer);
+		//SDL_UnlockTexture(screenbuffer);
 		SDL_RenderCopy(renderer, screenbuffer, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
@@ -285,7 +195,7 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 		return screenbuffer_pixels;
 	}
 
-	vec2i_t platform_screen_size() {
+	vec2i_t platform_screen_size(void) {
 		int width, height;
 		SDL_GetWindowSize(window, &width, &height);
 
@@ -302,25 +212,17 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 
 
 int main(int argc, char *argv[]) {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 
-	int gcdb_res = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-	if (gcdb_res < 0) {
-		printf("Failed to load gamecontrollerdb.txt\n");
-	}
-	else {
-		printf("load gamecontrollerdb.txt\n");
-	}
-
-	audio_device = SDL_OpenAudioDevice(NULL, 0, &(SDL_AudioSpec){
+	SDL_AudioSpec spec = {
 		.freq = 44100,
 		.format = AUDIO_F32,
 		.channels = 2,
 		.samples = 1024,
 		.callback = platform_audio_callback
-	}, NULL, 0);
+	};
 
-	gamepad = platform_find_gamepad();
+	audio_device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
 
 	perf_freq = SDL_GetPerformanceFrequency();
 

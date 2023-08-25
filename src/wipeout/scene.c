@@ -47,7 +47,7 @@ static struct {
 
 void scene_pulsate_red_light(Object *obj);
 void scene_move_oil_pump(Object *obj);
-void scene_update_aurora_borealis();
+void scene_update_aurora_borealis(void);
 
 void scene_load(const char *base_path, float sky_y_offset) {
 	texture_list_t scene_textures = image_get_compressed_textures(get_path(base_path, "scene.cmp"));
@@ -85,7 +85,7 @@ void scene_load(const char *base_path, float sky_y_offset) {
 			str_starts_with(obj->name, "newstad_")
 		) {
 			error_if(stands_len >= SCENE_STANDS_MAX, "SCENE_STANDS_MAX reached");
-			stands[stands_len++] = (scene_stand_t){.sfx = NULL, .pos = obj->origin};
+			stands[stands_len++] = (scene_stand_t){NULL, obj->origin};
 		}
 		obj = obj->next;
 	}
@@ -179,7 +179,10 @@ void scene_set_start_booms(int light_index) {
 
 
 void scene_pulsate_red_light(Object *obj) {
-	uint8_t r = clamp(sin(system_cycle_time() * M_PI * 2) * 128 + 128, 0, 255);
+	float _v = sin(system_cycle_time() * M_PI * 2) * 128 + 128;
+	float _min = 0;
+	float _max = 255;
+	uint8_t r = _v > _max ? _max : _v < _min ? _min : _v;
 	Prm libPoly = {.primitive = obj->primitives};
 
 	for (int v = 0; v < 4; v++) {
@@ -231,7 +234,7 @@ void scene_init_aurora_borealis() {
 	}
 }
 
-void scene_update_aurora_borealis() {
+void scene_update_aurora_borealis(void) {
 	float phase = system_time() / 30.0;
 	for (int i = 0; i < 80; i++) {
 		int16_t *coords = aurora_borealis.coords[i];

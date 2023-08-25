@@ -34,11 +34,13 @@ void particles_update() {
 }
 
 void particles_draw() {
+	mat4_t _mat;
 	if (particles_active == 0) {
 		return;
 	}
 
-	render_set_model_mat(&mat4_identity());
+	_mat = mat4_identity();
+	render_set_model_mat(&_mat);
 	render_set_depth_write(false);
 	render_set_blend_mode(RENDER_BLEND_LIGHTER);
 	render_set_depth_offset(-32.0);

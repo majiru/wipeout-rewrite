@@ -156,9 +156,9 @@ typedef enum {
 typedef void(*input_capture_callback_t)
 	(void *user, button_t button, int32_t ascii_char);
 
-void input_init();
-void input_cleanup();
-void input_clear();
+void input_init(void);
+void input_cleanup(void);
+void input_clear(void);
 
 void input_bind(input_layer_t layer, button_t button, uint8_t action);
 void input_unbind(input_layer_t layer,button_t button);

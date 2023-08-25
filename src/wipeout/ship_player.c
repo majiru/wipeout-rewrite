@@ -28,7 +28,12 @@
 
 void ship_player_update_sfx(ship_t *self) {
 	float speedf = self->speed * 0.000015;
-	self->sfx_engine_intake->volume = clamp(speedf, 0, 0.5);
+
+	float _v = speedf;
+	float _min = 0;
+	float _max = 0.5;
+	
+	self->sfx_engine_intake->volume = _v > _max ? _max : _v < _min ? _min : _v;
 	self->sfx_engine_intake->pitch = 0.5 + speedf * 1.25;
 
 	self->sfx_engine_thrust->volume = 0.05 + 0.025 * (self->thrust_mag / self->thrust_max);
@@ -124,7 +129,10 @@ void ship_player_update_intro_general(ship_t *self) {
 		self->thrust_mag -= SHIP_THRUST_RATE * system_tick();
 	}
 
-	self->thrust_mag = clamp(self->thrust_mag, 0, self->thrust_max);
+	float _v = self->thrust_mag;
+	float _min = 0;
+	float _max = self->thrust_max;
+	self->thrust_mag = _v > _max ? _max : _v < _min ? _min : _v;
 
 	// View
 	if (input_pressed(A_CHANGE_VIEW)) {
@@ -229,7 +237,11 @@ void ship_player_update_race(ship_t *self) {
 	else {
 		self->thrust_mag -= SHIP_THRUST_FALLOFF * system_tick();
 	}
-	self->thrust_mag = clamp(self->thrust_mag, 0, self->current_thrust_max);
+
+	float _v = self->thrust_mag;
+	float _min = 0;
+	float _max = self->current_thrust_max;
+	self->thrust_mag = _v > _max ? _max : _v < _min ? _min : _v;
 
 	if (flags_is(self->flags, SHIP_ELECTROED) && rand_int(0, 80) == 0) {
 		self->thrust_mag -= self->thrust_mag * 0.25; // FIXME: 60fps
@@ -242,7 +254,12 @@ void ship_player_update_race(ship_t *self) {
 	else if (self->brake_right > 0) {
 		self->brake_right -= SHIP_BRAKE_RATE * system_tick();
 	}
-	self->brake_right = clamp(self->brake_right, 0, 256);
+
+	_v = self->brake_right;
+	_min = 0;
+	_max = 256;
+
+	self->brake_right = _v > _max ? _max : _v < _min ? _min : _v;
 
 	if (input_state(A_BRAKE_LEFT))	{
 		self->brake_left += SHIP_BRAKE_RATE * system_tick();
@@ -250,7 +267,11 @@ void ship_player_update_race(ship_t *self) {
 	else if (self->brake_left > 0) {
 		self->brake_left -= SHIP_BRAKE_RATE * system_tick();
 	}
-	self->brake_left = clamp(self->brake_left, 0, 256);
+
+	_v = self->brake_left;
+	_min = 0;
+	_max = 256;
+	self->brake_left = _v > _max ? _max : _v < _min ? _min : _v;
 
 	// View
 	if (input_pressed(A_CHANGE_VIEW)) {
@@ -447,7 +468,11 @@ void ship_player_update_race(ship_t *self) {
 	}
 
 	self->angular_velocity = vec3_add(self->angular_velocity, vec3_mulf(self->angular_acceleration, system_tick()));
-	self->angular_velocity.y = clamp(self->angular_velocity.y, -self->turn_rate_max, self->turn_rate_max);
+
+	_v = self->angular_velocity.y;
+	_min = -self->turn_rate_max;
+	_max = self->turn_rate_max;
+	self->angular_velocity.y = _v > _max ? _max : _v < _min ? _min : _v;
 	
 	float brake_dir = (self->brake_left - self->brake_right) * (0.125 / 4096.0);
 	self->angle.y += brake_dir * self->speed * 0.000030517578125 * M_PI * 2 * 30 * system_tick();

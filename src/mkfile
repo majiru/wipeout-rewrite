@@ -1,0 +1,69 @@
+</$objtype/mkfile
+
+CFLAGS=-Fp -I/sys/include/npe -I/sys/include/npe/SDL2 -D__plan9__ -D__${objtype}__ -DRENDERER_SOFTWARE
+BIN=/$objtype/bin/games
+TARG=wipeout
+
+OFILES=\
+	race.$O \
+	camera.$O \
+	object.$O \
+	droid.$O \
+	ui.$O \
+	hud.$O \
+	image.$O \
+	game.$O \
+	menu.$O \
+	main_menu.$O \
+	ingame_menus.$O \
+	title.$O \
+	intro.$O \
+	scene.$O \
+	ship.$O \
+	ship_ai.$O \
+	ship_player.$O \
+	track.$O \
+	weapon.$O \
+	particle.$O \
+	sfx.$O \
+	utils.$O \
+	types.$O \
+	system.$O \
+	mem.$O \
+	input.$O \
+	render_software.$O \
+	platform_sdl.$O \
+
+default:V:	$O.out
+
+all:V:	$O.out
+
+$O.out: $OFILES $LIB
+	$LD $LDFLAGS -o $target $prereq
+
+%.$O:	$HFILES		# don't combine with following %.$O rules
+
+%.$O:	wipeout/%.c
+	$CC $CFLAGS $prereq
+
+%.$O:	%.c
+	$CC $CFLAGS $stem.c
+
+install:V:	$BIN/$TARG
+
+$BIN/$TARG:	$O.out
+	cp $prereq $BIN/$TARG
+
+installall:V:
+	for(objtype in $CPUS)
+		mk install
+
+allall:V:
+	for(objtype in $CPUS)
+		mk all
+
+nuke:V:
+	rm -f *.[$OS] [$OS].out y.tab.? lex.yy.c y.debug y.output *.acid $TARG $CLEANFILES
+
+clean:V:
+	rm -f *.[$OS] [$OS].out y.tab.? lex.yy.c y.debug y.output $TARG $CLEANFILES

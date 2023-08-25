@@ -45,13 +45,65 @@ typedef struct {
 } tris_t;
 
 
-#define rgba(R, G, B, A) ((rgba_t){.as_rgba = {.r = R, .g = G, .b = B, .a = A}})
-#define vec2(X, Y) ((vec2_t){.x = X, .y = Y})
-#define vec3(X, Y, Z) ((vec3_t){.x = X, .y = Y, .z = Z})
-#define vec2i(X, Y) ((vec2i_t){.x = X, .y = Y})
+#define vec2(X, Y) ((vec2_t){X, Y})
+#define vec3(X, Y, Z) ((vec3_t){X, Y, Z})
+#define vec2i(X, Y) ((vec2i_t){X, Y})
+
+#ifdef __plan9__
+
+static rgba_t
+rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	rgba_t x;
+
+	x.as_rgba.r = r;
+	x.as_rgba.g = g;
+	x.as_rgba.b = b;
+	x.as_rgba.a = a;
+	return x;
+}
+
+static mat4_t
+mat4(float m0,float m1,float m2,float m3,float m4,float m5,float m6,float m7,float m8,float m9,float m10,float m11,float m12,float m13,float m14, float m15)
+{
+	mat4_t r;
+
+	r.m[0] = m0;
+	r.m[1] = m1;
+	r.m[2] = m2;
+	r.m[3] = m3;
+	r.m[4] = m4;
+	r.m[5] = m5;
+	r.m[6] = m6;
+	r.m[7] = m7;
+	r.m[8] = m8;
+	r.m[9] = m9;
+	r.m[10] = m10;
+	r.m[11] = m11;
+	r.m[12] = m12;
+	r.m[13] = m13;
+	r.m[14] = m14;
+	r.m[15] = m15;
+	return r;
+}
+
+static mat4_t
+mat4_identity(void)
+{
+	return mat4(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	);
+}
+
+#else
+
+#define rgba(R, G, B, A) ((rgba_t){{R, G, B, A}})
 
 #define mat4(m0,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15) \
-	(mat4_t){.m = { \
+	(mat4_t){{ \
 		m0,   m1,  m2,  m3, \
 		m4,   m5,  m6,  m7, \
 		m8,   m9, m10, m11, \
@@ -64,6 +116,8 @@ typedef struct {
 		0, 0, 1, 0, \
 		0, 0, 0, 1 \
 	)
+
+#endif
 
 static inline vec2_t vec2_mulf(vec2_t a, float f) {
 	return vec2(

@@ -50,7 +50,7 @@ static sfx_t *nodes;
 static music_decoder_t *music;
 static void (*external_mix_cb)(float *, uint32_t len) = NULL;
 
-void sfx_load() {
+void sfx_load(void) {
 	// Init decode buffer for music
 	uint32_t channels = 2;
 	music = mem_bump(sizeof(music_decoder_t));
@@ -80,7 +80,11 @@ void sfx_load() {
 		uint8_t header = vb[p++];
 		uint8_t flags = vb[p++];
 		uint8_t shift = header & 0x0f;
-		uint8_t predictor = clamp(header >> 4, 0, 4);
+
+		uint8_t _v = header >> 4;
+		uint8_t _min = 0;
+		uint8_t _max = 4;
+		uint8_t predictor = _v > _max ? _max : _v < _min ? _min : _v;
 
 		if (flags_is(flags, VAG_REGION_END)) {
 			mem_bump(sizeof(sfx_data_t));
@@ -103,7 +107,11 @@ void sfx_load() {
 				sample += (history[0] * vag_tab[predictor][0] + history[1] * vag_tab[predictor][1]) >> 14;
 				history[1] = history[0];
 				history[0] = sample;
-				sample_buffer[sample_index++] = clamp(sample, -32768, 32767);
+
+				int32_t _v = sample;
+				int32_t _min = -32768;
+				int32_t _max = 32767;
+				sample_buffer[sample_index++] = _v > _max ? _max : _v < _min ? _min : _v;
 			}
 		}
 
@@ -118,7 +126,7 @@ void sfx_load() {
 	platform_set_audio_mix_cb(sfx_stero_mix);
 }
 
-void sfx_reset() {
+void sfx_reset(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_LOOP)) {
 			flags_set(nodes[i].flags, SFX_NONE);
@@ -126,7 +134,7 @@ void sfx_reset() {
 	}
 }
 
-void sfx_unpause() {
+void sfx_unpause(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_LOOP_PAUSE)) {
 			flags_rm(nodes[i].flags, SFX_LOOP_PAUSE);
@@ -135,7 +143,7 @@ void sfx_unpause() {
 	}
 }
 
-void sfx_pause() {
+void sfx_pause(void) {
 	for (int i = 0; i < SFX_MAX; i++) {
 		if (flags_is(nodes[i].flags, SFX_PLAY | SFX_LOOP)) {
 			flags_rm(nodes[i].flags, SFX_PLAY);
@@ -209,12 +217,19 @@ sfx_t *sfx_reserve_loop(sfx_source_t source_index) {
 	return sfx;
 }
 
+
 void sfx_set_position(sfx_t *sfx, vec3_t pos, vec3_t vel, float volume) {
 	vec3_t relative_position = vec3_sub(g.camera.position, pos);
 	vec3_t relative_velocity = vec3_sub(g.camera.real_velocity, vel);
 	float distance = vec3_len(relative_position);
 
-	sfx->volume = clamp(scale(distance, 512, 32768, 1, 0), 0, 1) * volume;
+	float _in_min = 512, _out_min = 1;
+	float _scale = _out_min + ((0) - _out_min) * (((distance) - _in_min) / ((32768) - _in_min));
+
+	float _v = _scale;
+	float _min = 0;
+	float _max = 1;
+	sfx->volume = _v > _max ? _max : _v < _min ? _min : _v;
 	sfx->pan = -sin(atan2(g.camera.position.x - pos.x, g.camera.position.z - pos.z)+g.camera.angle.y);
 
 	// Doppler effect
@@ -227,7 +242,7 @@ void sfx_set_position(sfx_t *sfx, vec3_t pos, vec3_t vel, float volume) {
 
 // Music
 
-uint32_t sfx_music_decode_frame() {
+uint32_t sfx_music_decode_frame(void) {
 	if (!music->file) {
 		return 0;
 	}
@@ -240,7 +255,7 @@ uint32_t sfx_music_decode_frame() {
 	return frame_len;
 }
 
-void sfx_music_rewind() {
+void sfx_music_rewind(void) {
 	fseek(music->file, music->first_frame_pos, SEEK_SET);
 	music->sample_data_len = 0;
 	music->sample_data_pos = 0;
@@ -348,8 +363,14 @@ void sfx_stero_mix(float *buffer, uint32_t len) {
 
 			sfx_data_t *source = &sources[sfx->source];
 			float sample = (float)source->samples[(int)sfx->position] / 32768.0;
-			left += sample * sfx->current_volume * clamp(1.0 - sfx->current_pan, 0, 1);
-			right += sample * sfx->current_volume * clamp(1.0 + sfx->current_pan, 0, 1);
+
+			float _v = 1.0 - sfx->current_pan;
+			float _min = 0;
+			float _max = 1;
+			left += sample * sfx->current_volume * (_v > _max ? _max : _v < _min ? _min : _v);
+
+			_v = 1.0 + sfx->current_pan;
+			right += sample * sfx->current_volume * (_v > _max ? _max : _v < _min ? _min : _v);
 
 			sfx->position += sfx->pitch;
 			if (sfx->position >= source->len) {
