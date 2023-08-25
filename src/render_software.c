@@ -240,12 +240,6 @@ void render_textures_dump(const char *path) {}
 
 // -----------------------------------------------------------------------------
 
-
-#define lerp(a, b, t) ({ \
-		__typeof__(a) _a = a; \
-		_a + ((b) - _a) * (t); \
-	})
-
 static inline rgba_t color_mix(rgba_t in, rgba_t out) {
 	uint8_t _a, _za, _zb, _zc;
  
