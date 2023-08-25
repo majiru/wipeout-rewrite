@@ -87,16 +87,14 @@ double platform_now() {
 }
 
 void platform_set_fullscreen(bool fullscreen) {
-	if (0) {
-	/*
+	if (fullscreen) {
 		int32_t display = SDL_GetWindowDisplayIndex(window);
 		
 		SDL_DisplayMode mode;
 		SDL_GetDesktopDisplayMode(display, &mode);
-		SDL_SetWindowDisplayMode(window, &mode);
-		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+		//SDL_SetWindowDisplayMode(window, &mode);
+		//SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 		SDL_ShowCursor(SDL_DISABLE);
-	*/
 	}
 	else {
 		SDL_SetWindowFullscreen(window, 0);
@@ -180,12 +178,12 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
 			screenbuffer_size = screen_size;
 		}
-		//SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
+		SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
 	}
 
 	void platform_end_frame(void) {
 		screenbuffer_pixels = NULL;
-		//SDL_UnlockTexture(screenbuffer);
+		SDL_UnlockTexture(screenbuffer);
 		SDL_RenderCopy(renderer, screenbuffer, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
