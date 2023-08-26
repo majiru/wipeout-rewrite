@@ -154,7 +154,7 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 
 	float _v = color.as_rgba.a * (1.0-p0.z) * FAR_PLANE * (2.0/255.0);
 	float _min = 0;
-	float _max = 1;
+	float _max = 255;
 	color.as_rgba.a = _v > _max ? _max : _v < _min ? _min : _v;
 
 	line(sc0, sc1, color);

@@ -46,7 +46,6 @@ typedef struct {
 	vertex_t vertices[3];
 } tris_t;
 
-
 #define vec2(X, Y) ((vec2_t){X, Y})
 #define vec3(X, Y, Z) ((vec3_t){X, Y, Z})
 #define vec2i(X, Y) ((vec2i_t){X, Y})
