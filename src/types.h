@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#pragma pack on
 typedef union rgba_t { 
 	struct { 
 		uint8_t r, g, b, a;
@@ -14,6 +15,7 @@ typedef union rgba_t {
 	uint8_t as_components[4];
 	uint32_t as_uint32;
 } rgba_t;
+#pragma pack off
 
 typedef struct {
 	float x, y;
