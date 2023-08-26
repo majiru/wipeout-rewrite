@@ -51,6 +51,7 @@ void ships_load() {
 	}
 }
 
+
 void ships_init(section_t *section) {
 	section_t *start_sections[len(g.ships)];
 

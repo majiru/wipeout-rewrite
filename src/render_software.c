@@ -239,26 +239,19 @@ void render_textures_reset(uint16_t len) {
 
 void render_textures_dump(const char *path) {}
 
-
+static uint8_t
+lerp8(uint8_t a, uint8_t b, float t)
+{
+	return a + (b - a) * t;
+}
 
 // -----------------------------------------------------------------------------
 
 static inline rgba_t color_mix(rgba_t in, rgba_t out) {
-	uint8_t _a, _za, _zb, _zc;
- 
-	_a = in.as_rgba.r;
-	_za = _a + ((out.as_rgba.r) - _a) * (out.as_rgba.a/255.0);
-
-	_a = in.as_rgba.g;
-	_zb = _a + ((out.as_rgba.g) - _a) * (out.as_rgba.a/255.0);
-
-	_a = in.as_rgba.b;
-	_zc = _a + ((out.as_rgba.b) - _a) * (out.as_rgba.a/255.0);
-
 	return rgba(
-		_za,
-		_zb,
-		_zc,
+		lerp8(in.as_rgba.r, out.as_rgba.r, out.as_rgba.a/255.0),
+		lerp8(in.as_rgba.g, out.as_rgba.g, out.as_rgba.a/255.0),
+		lerp8(in.as_rgba.b, out.as_rgba.b, out.as_rgba.a/255.0),
 		1
 	);
 }
