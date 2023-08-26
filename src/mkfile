@@ -1,6 +1,6 @@
 </$objtype/mkfile
 
-CFLAGS=-Fp -I/sys/include/npe -I/sys/include/npe/SDL2 -D__plan9__ -D__${objtype}__ -DRENDERER_SOFTWARE
+CFLAGS=-Fpw -I/sys/include/npe -I/sys/include/npe/SDL2 -D__plan9__ -D__${objtype}__ -DRENDERER_SOFTWARE
 BIN=/$objtype/bin/games
 TARG=wipeout
 
