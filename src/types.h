@@ -222,12 +222,12 @@ static inline float wrap_angle(float a) {
 
 float vec3_angle(vec3_t a, vec3_t b);
 vec3_t vec3_wrap_angle(vec3_t a);
-vec3_t vec3_normalize(vec3_t a);
+static vec3_t vec3_normalize(vec3_t a);
 vec3_t vec3_project_to_ray(vec3_t p, vec3_t r0, vec3_t r1);
 float vec3_distance_to_plane(vec3_t p, vec3_t plane_pos, vec3_t plane_normal);
 vec3_t vec3_reflect(vec3_t incidence, vec3_t normal, float f);
 
-float wrap_angle(float a);
+static float wrap_angle(float a);
 
 vec3_t vec3_transform(vec3_t a, mat4_t *mat);
 void mat4_set_translation(mat4_t *mat, vec3_t pos);
