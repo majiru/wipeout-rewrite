@@ -460,10 +460,10 @@ void ship_player_update_race(ship_t *self) {
 	// Orientation
 	if (self->angular_acceleration.y == 0) {
 		if (self->angular_velocity.y > 0) {
-			self->angular_acceleration.y -= min(self->turn_rate, self->angular_velocity.y / system_tick());
+			self->angular_acceleration.y -= minfloat(self->turn_rate, self->angular_velocity.y / system_tick());
 		}
 		else if (self->angular_velocity.y < 0) {
-			self->angular_acceleration.y += min(self->turn_rate, -self->angular_velocity.y / system_tick());
+			self->angular_acceleration.y += minfloat(self->turn_rate, -self->angular_velocity.y / system_tick());
 		}
 	}
 

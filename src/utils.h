@@ -10,21 +10,31 @@
 #endif
 #define member_size(type, member) sizeof(((type *)0)->member)
 
-#ifdef __plan9__
-
 static int
-max(int a, int b)
+maxint(int a, int b)
 {
 	return a > b ? a : b;
 }
 
 static int
-min(int a, int b)
+minint(int a, int b)
 {
 	return a < b ? a : b;
 }
 
-#else
+static float
+maxfloat(float a, float b)
+{
+	return a > b ? a : b;
+}
+
+static float
+minfloat(float a, float b)
+{
+	return a < b ? a : b;
+}
+
+#if 0
 
 #define max(a,b) ({ \
 		__typeof__ (a) _a = (a); \

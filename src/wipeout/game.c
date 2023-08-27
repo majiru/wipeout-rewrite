@@ -597,7 +597,7 @@ void game_update() {
 	double frame_start_time = platform_now();
 
 	int sh = render_size().y;
-	int scale = max(1, sh >=  720 ? sh / 360 : sh / 240);
+	int scale = maxint(1, sh >=  720 ? sh / 360 : sh / 240);
 	if (save.ui_scale && save.ui_scale < scale) {
 		scale = save.ui_scale;
 	}

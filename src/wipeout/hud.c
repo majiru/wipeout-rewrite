@@ -24,7 +24,7 @@ typedef struct {
 	rgba_t color;
 } speedo_bar_t;
 
-const struct {
+struct {
 	uint16_t width;
 	uint16_t skew;
 	speedo_bar_t bars[13];
@@ -55,6 +55,7 @@ initspeedo(void)
 static uint16_t speedo_facia_texture;
 
 void hud_load() {
+	initspeedo();
 	speedo_facia_texture = image_get_texture("wipeout/textures/speedo.tim");
 	target_reticle = image_get_texture_semi_trans("wipeout/textures/target2.tim");
 	weapon_icon_textures = image_get_compressed_textures("wipeout/common/wicons.cmp");
@@ -155,7 +156,6 @@ static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speed
 }
 
 static void hud_draw_speedo_bars(vec2i_t *pos, float f, rgba_t color_override) {
-	static int donespeedoinit = 0;
 	if (f <= 0) {
 		return;
 	}
@@ -167,10 +167,6 @@ static void hud_draw_speedo_bars(vec2i_t *pos, float f, rgba_t color_override) {
 		f = 13;
 	}
 
-	if(!donespeedoinit){
-		initspeedo();
-		donespeedoinit = 1;
-	}
 	int bars = f;
 	for (int i = 1; i < bars; i++) {
 		hud_draw_speedo_bar(pos, &speedo.bars[i - 1], &speedo.bars[i], 1, color_override);
@@ -223,7 +219,7 @@ void hud_draw(ship_t *ship) {
 	}
 
 	// Current Lap
-	int display_lap = max(0, ship->lap + 1);
+	int display_lap = maxint(0, ship->lap + 1);
 	ui_draw_text("LAP", ui_scaled(vec2i(15, 8)), UI_SIZE_8, UI_COLOR_ACCENT); 
 	ui_draw_number(display_lap, ui_scaled(vec2i(10, 19)), UI_SIZE_16, UI_COLOR_DEFAULT); 
 	int width = ui_char_width('0' + display_lap, UI_SIZE_16);

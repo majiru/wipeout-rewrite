@@ -151,9 +151,9 @@ void render_push_tris(tris_t tris, uint16_t texture_index) {
 	vec2i_t sc2 = vec2i(p2.x * w2 + w2, h2 - p2.y * h2);
 
 	rgba_t color = tris.vertices[0].color;
-	color.as_rgba.r = min(color.as_rgba.r * 2, 255);
-	color.as_rgba.g = min(color.as_rgba.g * 2, 255);
-	color.as_rgba.b = min(color.as_rgba.b * 2, 255);
+	color.as_rgba.r = minint(color.as_rgba.r * 2, 255);
+	color.as_rgba.g = minint(color.as_rgba.g * 2, 255);
+	color.as_rgba.b = minint(color.as_rgba.b * 2, 255);
 
 	float _v = color.as_rgba.a * (1.0-p0.z) * FAR_PLANE * (2.0/255.0);
 	float _min = 0;
