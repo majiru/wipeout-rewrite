@@ -33,6 +33,9 @@ uint16_t RENDER_NO_TEXTURE;
 
 
 void render_init(vec2i_t screen_size) {
+#ifdef __plan9__
+	setfcr(0);
+#endif
 	render_set_screen_size(screen_size);
 	textures_len = 0;
 
