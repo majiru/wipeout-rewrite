@@ -31,18 +31,22 @@ static uint32_t textures_len;
 
 uint16_t RENDER_NO_TEXTURE;
 
-
-void render_init(vec2i_t screen_size) {
+void global_init(void)
+{
 #ifdef __plan9__
 	setfcr(0);
 #endif
-	render_set_screen_size(screen_size);
-	textures_len = 0;
-
 	view_mat = mat4_identity();
 	mvp_mat = mat4_identity();
 	projection_mat = mat4_identity();
 	sprite_mat = mat4_identity();
+}
+
+
+void render_init(vec2i_t screen_size) {
+	render_set_screen_size(screen_size);
+	textures_len = 0;
+
 	rgba_t white_pixels[4] = {
 		rgba(128,128,128,255), rgba(128,128,128,255),
 		rgba(128,128,128,255), rgba(128,128,128,255)

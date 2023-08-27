@@ -208,8 +208,10 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 #endif
 
 
+void global_init(void);
 
 int main(int argc, char *argv[]) {
+	global_init();
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 
 	SDL_AudioSpec spec = {
