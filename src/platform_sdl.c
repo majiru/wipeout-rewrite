@@ -175,7 +175,7 @@ void platform_set_audio_mix_cb(void (*cb)(float *buffer, uint32_t len)) {
 			if (screenbuffer) {
 				SDL_DestroyTexture(screenbuffer);
 			}
-			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
+			screenbuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, screen_size.x, screen_size.y);
 			screenbuffer_size = screen_size;
 		}
 		SDL_LockTexture(screenbuffer, NULL, &screenbuffer_pixels, &screenbuffer_pitch);
