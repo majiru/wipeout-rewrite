@@ -504,7 +504,7 @@ static void page_circut_init(menu_t *menu) {
 }
 
 #define objects_unpack(DEST, SRC) \
-	objects_unpack_imp((Object **)DEST, sizeof(DEST)/sizeof(Object*), SRC)
+	objects_unpack_imp((Object **)&DEST, sizeof(DEST)/sizeof(Object*), SRC)
 
 static void objects_unpack_imp(Object **dest_array, int len, Object *src) {
 	int i;
@@ -527,10 +527,10 @@ void main_menu_init() {
 	objects_unpack(models.race_classes, objects_load("wipeout/common/leeg.prm", image_get_compressed_textures("wipeout/common/leeg.cmp")));
 	objects_unpack(models.teams, objects_load("wipeout/common/teams.prm", texture_list_empty()));
 	objects_unpack(models.pilots, objects_load("wipeout/common/pilot.prm", image_get_compressed_textures("wipeout/common/pilot.cmp")));
-	objects_unpack(&models.options, objects_load("wipeout/common/alopt.prm", image_get_compressed_textures("wipeout/common/alopt.cmp")));
+	objects_unpack(models.options, objects_load("wipeout/common/alopt.prm", image_get_compressed_textures("wipeout/common/alopt.cmp")));
 	objects_unpack(models.rescue, objects_load("wipeout/common/rescu.prm", image_get_compressed_textures("wipeout/common/rescu.cmp")));
 	objects_unpack(models.controller, objects_load("wipeout/common/pad1.prm", image_get_compressed_textures("wipeout/common/pad1.cmp")));
-	objects_unpack(&models.misc, objects_load("wipeout/common/msdos.prm", image_get_compressed_textures("wipeout/common/msdos.cmp")));
+	objects_unpack(models.misc, objects_load("wipeout/common/msdos.prm", image_get_compressed_textures("wipeout/common/msdos.cmp")));
 
 	menu_reset(main_menu);
 	page_main_init(main_menu);
