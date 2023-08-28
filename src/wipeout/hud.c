@@ -71,7 +71,7 @@ static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speed
 	else {
 		left_color = a->color;
 		float _za, _zb, _zc, _zd;
-		uint8_t _a;
+		float _a;
 		_a = a->color.as_rgba.r;
 		_za = _a + (b->color.as_rgba.r - _a) * f;
 
@@ -93,7 +93,7 @@ static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speed
 
 	float right_h;
 	{
-		uint16_t _a;
+		float _a;
 		float _za;
 		_a = a->height;
 		_za = _a + (b->height - _a) * f;
@@ -104,7 +104,7 @@ static void hud_draw_speedo_bar(vec2i_t *pos, const speedo_bar_t *a, const speed
 	vec2i_t bottom_left  = vec2i(a->offset.x + 1 - a->height / speedo.skew, a->offset.y + a->height);
 	vec2i_t top_right, bottom_right;
 	{
-		uint32_t _a;
+		float _a;
 		float _za, _zb;
 		_a = a->offset.x + 1;
 		_za = _a + (b->offset.x - _a) * f;
